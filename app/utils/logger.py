@@ -3,7 +3,6 @@ Logger utility for the RKLLM API Server.
 """
 import os
 import logging
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from app.core.config import settings
 
@@ -15,10 +14,8 @@ def setup_logging():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # Generate filename with date and time
-    # Format: server_YYYYMMDD_HHMMSS.log
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(log_dir, f"server_{timestamp}.log")
+    # Use a fixed filename for consistent log rotation across restarts
+    log_file = os.path.join(log_dir, "server.log")
 
     # Common Formatter for log content
     formatter = logging.Formatter(

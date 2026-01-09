@@ -25,7 +25,7 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/rkllm-openai.git
+    git clone https://github.com/huangyajie/rkllm-openai.git
     cd rkllm-openai
     ```
 
