@@ -1,0 +1,13 @@
+[project]
+name = "rkllm-ai-engine"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.128.0",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "pylint>=4.0.4",
+    "uvicorn>=0.40.0",
+]
