@@ -6,6 +6,42 @@ import yaml
 from typing import Optional, Dict, Any
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
+class YamlConfigSettingsSource(PydanticBaseSettingsSource):
+    """
+    A simple settings source class that loads configuration from a YAML file.
+    """
+    def get_field_value(
+        self, field: Any, field_name: str
+    ) -> tuple[Any, str, bool]:
+        encoding = self.config.get("env_file_encoding")
+        file_content_json = yaml.safe_load(
+            self.file_path.read_text(encoding)
+        )
+        field_value = file_content_json.get(field_name)
+        return field_value, field_name, False
+
+    def prepare_field_value(
+        self, field_name: str, field: Any, value: Any, value_is_complex: bool
+    ) -> Any:
+        return value
+
+    def __call__(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {}
+        # Read from environment variable directly to avoid Pydantic config warnings
+        config_file = os.getenv("CONFIG_FILE", "config.yaml")
+
+        path = os.path.abspath(config_file)
+        if not os.path.exists(path):
+            return d
+
+        with open(path, "r", encoding="utf-8") as f:
+            yaml_config = yaml.safe_load(f)
+            if yaml_config:
+                # Flatten the config if it's nested or just use as is
+                # Here we assume a flat structure matching the model fields
+                d.update(yaml_config)
+        return d
+
 class Settings(BaseSettings):
     """
     Application settings model.
@@ -40,7 +76,6 @@ class Settings(BaseSettings):
     LOG_BACKUP_COUNT: int = 5
 
     model_config = SettingsConfigDict(
-        yaml_file=os.getenv("CONFIG_FILE", "config.yaml"),
         extra="ignore"
     )
 
@@ -59,42 +94,5 @@ class Settings(BaseSettings):
             env_settings,
             file_secret_settings,
         )
-
-class YamlConfigSettingsSource(PydanticBaseSettingsSource):
-    """
-    A simple settings source class that loads configuration from a YAML file.
-    """
-    def get_field_value(
-        self, field: Any, field_name: str
-    ) -> tuple[Any, str, bool]:
-        encoding = self.config.get("env_file_encoding")
-        file_content_json = yaml.safe_load(
-            self.file_path.read_text(encoding)
-        )
-        field_value = file_content_json.get(field_name)
-        return field_value, field_name, False
-
-    def prepare_field_value(
-        self, field_name: str, field: Any, value: Any, value_is_complex: bool
-    ) -> Any:
-        return value
-
-    def __call__(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {}
-        config_file = self.settings_cls.model_config.get("yaml_file")
-        if not config_file:
-            return d
-
-        path = os.path.abspath(config_file)
-        if not os.path.exists(path):
-            return d
-
-        with open(path, "r", encoding="utf-8") as f:
-            yaml_config = yaml.safe_load(f)
-            if yaml_config:
-                # Flatten the config if it's nested or just use as is
-                # Here we assume a flat structure matching the model fields
-                d.update(yaml_config)
-        return d
 
 settings = Settings()

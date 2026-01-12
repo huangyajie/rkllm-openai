@@ -11,7 +11,7 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 - 🌊 **Streaming Support**: Real-time token streaming (Server-Sent Events).
 - 🛠️ **Function Calling**: Support for tool use/function calling.
 - 🔌 **LoRA Support**: Dynamic loading of LoRA adapters.
-- ⚙️ **Configurable**: Easy configuration via `.env` file.
+- ⚙️ **Configurable**: Easy configuration via `config.yaml` file.
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 3.  **Prepare RKLLM Runtime:**
 
     Ensure you have `librkllmrt.so` from the official Rockchip RKLLM SDK.
-    Place it in the `lib/` directory or specify the path in `.env`.
+    Place it in the `lib/` directory or specify the path in `config.yaml`.
 
     ```bash
     mkdir -p lib
@@ -94,7 +94,7 @@ uv run python main.py
 Or directly with `uvicorn` via `uv run` (useful for development):
 
 ```bash
-uv run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn main:app --host 0.0.0.0 --port 8080
 ```
 
 ## Usage
@@ -155,7 +155,7 @@ This project provides a pre-configured Docker setup for RK3588/RK3576 devices.
     Update the volume paths to point to your local files:
     ```yaml
     volumes:
-      - /path/to/host/librkllmrt.so:/app/lib/librkllmrt.so:ro
+      - /path/to/host/lib:/app/lib:ro
       - /path/to/host/models:/app/models:ro
       - /path/to/host/config.yaml:/app/config/config.yaml:ro
     ```
