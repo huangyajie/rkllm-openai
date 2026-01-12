@@ -57,34 +57,30 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 
 ## Configuration
 
-Create a `.env` file in the root directory. You can copy the example:
-
-```bash
-cp .env.example .env
-```
+Configure the rkllm settings in `config.yaml` located in the root directory.
 
 **Key Settings:**
 
-```ini
+```yaml
 # Path to your converted RKLLM model file
-MODEL_PATH=/path/to/your/model.rkllm
+MODEL_PATH: "/path/to/your/model.rkllm"
 
 # Target Platform (rk3588 or rk3576)
-TARGET_PLATFORM=rk3588
+TARGET_PLATFORM: "rk3588"
 
 # Path to the RKLLM runtime library
-RKLLM_LIB_PATH=lib/librkllmrt.so
+RKLLM_LIB_PATH: "lib/librkllmrt.so"
 
 # Server Configuration
-HOST=0.0.0.0
-PORT=8080
+HOST: "0.0.0.0"
+PORT: 8080
 
 # Generation Parameters (Defaults)
-MAX_CONTEXT_LEN=4096
-MAX_NEW_TOKENS=4096
-TOP_K=1
-TOP_P=0.9
-TEMPERATURE=0.8
+MAX_CONTEXT_LEN: 4096
+MAX_NEW_TOKENS: 4096
+TOP_K: 1
+TOP_P: 0.9
+TEMPERATURE: 0.8
 ```
 
 ## Running the Server
@@ -141,8 +137,36 @@ for chunk in response:
         print(chunk.choices[0].delta.content, end="", flush=True)
 ```
 
-## License
+## Docker Deployment
 
+This project provides a pre-configured Docker setup for RK3588/RK3576 devices.
+
+### Prerequisites (Docker)
+- Docker installed on your Rockchip device.
+- NPU driver loaded on the host system (`/dev/dri` exists).
+- `librkllmrt.so` available on the host.
+
+### Quick Start with Docker Compose
+
+1.  **Prepare your environment**:
+    Ensure you have your model file and `librkllmrt.so` library ready.
+
+2.  **Edit `docker/docker-compose.yml`**:
+    Update the volume paths to point to your local files:
+    ```yaml
+    volumes:
+      - /path/to/host/librkllmrt.so:/app/lib/librkllmrt.so:ro
+      - /path/to/host/models:/app/models:ro
+      - /path/to/host/config.yaml:/app/config/config.yaml:ro
+    ```
+
+3.  **Run the service**:
+    ```bash
+    cd docker
+    docker compose up -d
+    ```
+
+## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
