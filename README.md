@@ -11,7 +11,7 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 - 🌊 **Streaming Support**: Real-time token streaming (Server-Sent Events).
 - 🛠️ **Function Calling**: Support for tool use/function calling.
 - 🔌 **LoRA Support**: Dynamic loading of LoRA adapters.
-- ⚙️ **Configurable**: Easy configuration via `.env` file.
+- ⚙️ **Configurable**: Easy configuration via `config.yaml` file.
 
 ## Prerequisites
 
@@ -44,7 +44,7 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 3.  **Prepare RKLLM Runtime:**
 
     Ensure you have `librkllmrt.so` from the official Rockchip RKLLM SDK.
-    Place it in the `lib/` directory or specify the path in `.env`.
+    Place it in the `lib/` directory or specify the path in `config.yaml`.
 
     ```bash
     mkdir -p lib
