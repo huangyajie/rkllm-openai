@@ -4,9 +4,12 @@ Chat service module handling model inference and threading.
 import threading
 import queue
 import asyncio
+import logging
 from typing import Optional, AsyncGenerator
 from app.libs.rkllm import RKLLM, LLMCallState
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 class ChatService:
     """
@@ -37,7 +40,7 @@ class ChatService:
         if self.rkllm_model is not None:
             return
 
-        print(f"Loading RKLLM model from {settings.MODEL_PATH}...")
+        logger.info("Loading RKLLM model from %s...", settings.MODEL_PATH)
         self.rkllm_model = RKLLM(
             model_path=settings.MODEL_PATH,
             platform=settings.TARGET_PLATFORM,
@@ -45,7 +48,7 @@ class ChatService:
             prompt_cache_path=settings.PROMPT_CACHE_PATH if settings.PROMPT_CACHE_PATH else None,
             callback_func=self._callback
         )
-        print("RKLLM model loaded.")
+        logger.info("RKLLM model loaded.")
 
     def _callback(self, result, userdata, state):
         """Callback function for RKLLM inference."""
@@ -129,14 +132,14 @@ class ChatService:
                     break
 
         except asyncio.CancelledError:
-            print("Request cancelled by client")
+            logger.info("Request cancelled by client")
             raise
         except Exception as e:
-            print(f"Error during chat: {e}")
+            logger.error("Error during chat: %s", e)
             raise
         finally:
             if thread and thread.is_alive():
-                print("Aborting RKLLM inference...")
+                logger.warning("Aborting RKLLM inference...")
                 self.rkllm_model.abort()
                 # Optionally wait for thread to cleanup?
                 # Doing thread.join() here would block the event loop.

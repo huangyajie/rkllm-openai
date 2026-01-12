@@ -3,6 +3,7 @@ FastAPI router for Chat Completions API.
 """
 import json
 import uuid
+import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -15,6 +16,8 @@ from app.schemas.chat_schema import (
 from app.services.chat_service import chat_service
 from app.utils.tools import build_prompt_from_messages, parse_tool_calls
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Chat"])
 
@@ -150,8 +153,8 @@ async def stream_generator(generator, model_name, has_tools):
         # pylint: disable=f-string-without-interpolation
         error_json = json.dumps({"error": str(e)})
         yield f"data: {error_json}\n\n"
-    except Exception as e: # pylint: disable=broad-exception-caught
-        print(f"Error in stream: {e}")
+    except Exception as e: # pylint: disable=broad-except
+        logger.error("Error in stream: %s", e)
         yield "data: [DONE]\n\n"
 
 def create_chunk(model, content=None, tool_calls=None, finish_reason=None):
