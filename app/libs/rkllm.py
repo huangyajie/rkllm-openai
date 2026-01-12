@@ -14,6 +14,8 @@ from app.core.config import settings
 rkllm_lib = None
 try:
     lib_path = settings.RKLLM_LIB_PATH
+    # Expand user home directory (e.g. ~/libs/...)
+    lib_path = os.path.expanduser(lib_path)
     if os.path.exists(lib_path):
         rkllm_lib = ctypes.CDLL(lib_path)
     else:

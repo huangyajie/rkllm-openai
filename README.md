@@ -94,7 +94,7 @@ uv run python main.py
 Or directly with `uvicorn` via `uv run` (useful for development):
 
 ```bash
-uv run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn main:app --host 0.0.0.0 --port 8080
 ```
 
 ## Usage
@@ -155,7 +155,7 @@ This project provides a pre-configured Docker setup for RK3588/RK3576 devices.
     Update the volume paths to point to your local files:
     ```yaml
     volumes:
-      - /path/to/host/librkllmrt.so:/app/lib/librkllmrt.so:ro
+      - /path/to/host/lib:/app/lib:ro
       - /path/to/host/models:/app/models:ro
       - /path/to/host/config.yaml:/app/config/config.yaml:ro
     ```
