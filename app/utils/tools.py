@@ -4,6 +4,7 @@ Utility functions for tool parsing and prompt building.
 import json
 import uuid  # pylint: disable=unused-import
 import re
+import logging
 from typing import List, Dict, Optional, Tuple, Any
 from app.schemas.chat_schema import ChatMessage
 

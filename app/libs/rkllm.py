@@ -3,8 +3,11 @@ RKLLM wrapper module using ctypes.
 """
 import ctypes
 import os
+import logging
 from typing import Optional
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name, too-few-public-methods, bad-indentation
 # pylint: disable=too-many-instance-attributes, line-too-long
@@ -23,9 +26,9 @@ try:
         if os.path.exists(os.path.abspath(lib_path)):
             rkllm_lib = ctypes.CDLL(os.path.abspath(lib_path))
         else:
-            print(f"Warning: RKLLM library not found at {lib_path}")
-except Exception as e:
-    print(f"Error loading RKLLM library: {e}")
+            logger.warning("Warning: RKLLM library not found at %s", lib_path)
+except Exception as e: # pylint: disable=broad-except
+    logger.error("Error loading RKLLM library: %s", e)
 
 # Definitions
 RKLLM_Handle_t = ctypes.c_void_p
@@ -212,7 +215,7 @@ class RKLLM:
         self.callback = callback_type(callback_func) if callback_func else None
 
         rkllm_param = RKLLMParam()
-        rkllm_param.model_path = bytes(model_path, "utf-8")
+        rkllm_param.model_path = bytes(os.path.expanduser(model_path), "utf-8")
         rkllm_param.max_context_len = settings.MAX_CONTEXT_LEN
         rkllm_param.max_new_tokens = settings.MAX_NEW_TOKENS
         rkllm_param.skip_special_token = True
@@ -281,7 +284,7 @@ class RKLLM:
             lora_adapter_name = "default"
             lora_adapter = RKLLMLoraAdapter()
             ctypes.memset(ctypes.byref(lora_adapter), 0, ctypes.sizeof(RKLLMLoraAdapter))
-            lora_adapter.lora_adapter_path = ctypes.c_char_p(lora_model_path.encode("utf-8"))
+            lora_adapter.lora_adapter_path = ctypes.c_char_p(os.path.expanduser(lora_model_path).encode("utf-8"))
             lora_adapter.lora_adapter_name = ctypes.c_char_p(lora_adapter_name.encode("utf-8"))
             lora_adapter.scale = 1.0
 
@@ -304,7 +307,7 @@ class RKLLM:
             rkllm_load_prompt_cache = rkllm_lib.rkllm_load_prompt_cache
             rkllm_load_prompt_cache.argtypes = [RKLLM_Handle_t, ctypes.c_char_p]
             rkllm_load_prompt_cache.restype = ctypes.c_int
-            rkllm_load_prompt_cache(self.handle, ctypes.c_char_p(prompt_cache_path.encode("utf-8")))
+            rkllm_load_prompt_cache(self.handle, ctypes.c_char_p(os.path.expanduser(prompt_cache_path).encode("utf-8")))
 
         self.tools = None
 
