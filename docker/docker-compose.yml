@@ -1,0 +1,52 @@
+services:
+  rkllm-openai:
+    # Use the image built from local Dockerfile or pull from registry
+    # image: ghcr.io/huangyajie/rkllm-openai:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: rkllm-openai
+    restart: unless-stopped
+    
+    # NPU Device Passthrough
+    # CRITICAL: This allows the container to access the NPU hardware
+    privileged: true
+    devices:
+      - /dev/dri:/dev/dri
+    
+    # Environment Variables
+    # You can configure settings here or use a config file
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - CONFIG_FILE=/app/config/config.yaml
+      # Ensure python can find the library if not in standard path
+      - LD_LIBRARY_PATH=/app/lib:$LD_LIBRARY_PATH
+    
+    # Volume Mounts
+    volumes:
+      # 1. Mount the RKLLM Runtime Library (REQUIRED)
+      # Replace './lib/librkllmrt.so' with the actual path on your host
+      - ../lib/librkllmrt.so:/app/lib/librkllmrt.so:ro
+      
+      # 2. Mount the Models Directory (REQUIRED)
+      # Replace '../models' with your actual models directory
+      - ../models:/app/models:ro
+
+      # 3. Mount Configuration (Optional but recommended)
+      - ../config.yaml:/app/config/config.yaml:ro
+      
+      # 4. Mount Logs (Optional)
+      - ./logs:/app/logs
+    
+    ports:
+      - "8080:8080"
+    
+    # Resource limits (Optional)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: rockchip-npu
+    #           count: 1
+    #           capabilities: [npu]
