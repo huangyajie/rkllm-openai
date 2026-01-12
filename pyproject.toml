@@ -1,7 +1,7 @@
 [project]
-name = "rkllm-ai-engine"
+name = "rkllm-openai"
 version = "0.1.0"
-description = "Add your description here"
+description = "An OpenAI-compatible API server for Rockchip RKLLM inference"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
