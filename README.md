@@ -7,6 +7,8 @@ This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, a
 ## Features
 
 - 🚀 **OpenAI API Compatibility**: Full support for `/v1/chat/completions` and `/v1/models`.
+- 🖼️ **Multimodal Support (VLM)**: Support for vision-language models (e.g., Qwen2-VL) with image input capabilities.
+- 💭 **Thinking Process**: Support for reasoning models with `<think>` tag parsing and `reasoning_content` output.
 - ⚡ **Hardware Acceleration**: Built on `librkllmrt` for NPU acceleration on Rockchip devices.
 - 🌊 **Streaming Support**: Real-time token streaming (Server-Sent Events).
 - 🛠️ **Function Calling**: Support for tool use/function calling.
@@ -65,11 +67,17 @@ Configure the rkllm settings in `config.yaml` located in the root directory.
 # Path to your converted RKLLM model file
 MODEL_PATH: "/path/to/your/model.rkllm"
 
+# Path to the vision encoder .rknn model file (optional for multimodal/VLM)
+# VISION_MODEL_PATH: "/path/to/your/vision_model.rknn"
+
 # Target Platform (rk3588 or rk3576)
 TARGET_PLATFORM: "rk3588"
 
 # Path to the RKLLM runtime library
 RKLLM_LIB_PATH: "lib/librkllmrt.so"
+
+# Path to librknnrt.so used for vision encoder (optional for VLM)
+# RKNN_LIB_PATH: "lib/librknnrt.so"
 
 # Server Configuration
 HOST: "0.0.0.0"
@@ -135,6 +143,56 @@ response = client.chat.completions.create(
 for chunk in response:
     if chunk.choices[0].delta.content:
         print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
+### Multimodal (VLM) Example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8080/v1", api_key="none")
+response = client.chat.completions.create(
+    model="rkllm-model",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What is in this image?"},
+            {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}
+        ]
+    }]
+)
+print(response.choices[0].message.content)
+```
+
+### Thinking Process (Reasoning) Example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8080/v1", api_key="none")
+response = client.chat.completions.create(
+    model="rkllm-model",
+    messages=[{"role": "user", "content": "Which is larger, 9.11 or 9.9?"}],
+    extra_body={"enable_thinking": True},
+    stream=True
+)
+
+is_thinking = False
+for chunk in response:
+    delta = chunk.choices[0].delta
+    # Handle reasoning content
+    if hasattr(delta, "reasoning_content") and delta.reasoning_content:
+        if not is_thinking:
+            print("\nThinking:\n", end="", flush=True)
+            is_thinking = True
+        print(delta.reasoning_content, end="", flush=True)
+    
+    # Handle normal content
+    if delta.content:
+        if is_thinking:
+            print("\n\nAnswer:\n", end="", flush=True)
+            is_thinking = False
+        print(delta.content, end="", flush=True)
 ```
 
 ## Docker Deployment

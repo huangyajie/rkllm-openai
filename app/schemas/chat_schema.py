@@ -1,13 +1,14 @@
 """
 Pydantic schemas for the Chat API.
 """
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel
 
 class ChatMessage(BaseModel):
     """Schema for a single chat message."""
     role: str
-    content: Optional[str] = None
+    content: Optional[Union[str, List[Dict[str, Any]]]] = None
+    reasoning_content: Optional[str] = None
     name: Optional[str] = None
     tool_calls: Optional[List[Dict[str, Any]]] = None
 
@@ -17,6 +18,7 @@ class ChatCompletionRequest(BaseModel):
     messages: List[ChatMessage]
     stream: Optional[bool] = False
     tools: Optional[List[Dict[str, Any]]] = None
+    enable_thinking: Optional[bool] = False
 
 class ChatCompletionChoice(BaseModel):
     """Schema for a single choice in the response."""
@@ -44,6 +46,7 @@ class DeltaMessage(BaseModel):
     """Schema for a streaming delta message."""
     role: Optional[str] = None
     content: Optional[str] = None
+    reasoning_content: Optional[str] = None
     tool_calls: Optional[List[Dict[str, Any]]] = None
 
 class ChatCompletionChunkChoice(BaseModel):

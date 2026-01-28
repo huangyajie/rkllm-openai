@@ -2,24 +2,46 @@
 # 模型配置 (Model Configuration)
 # ==============================================================================
 
-# RKLLM 模型文件的绝对路径
+# RKLLM 模型文件的绝对路径 (Path to the .rkllm model file)
 MODEL_PATH: "/app/models/rkllm-model.rkllm"
 
-# 目标平台 (Target Platform)
-# Options: rk3588, rk3576, rv1126b, rk3562
-TARGET_PLATFORM: "rk3588"
+# 视觉模型路径 (.rknn) (可选，启用多模态时配置，当MODEL_PATH为VLM时，需要配置)
+# Path to the vision encoder .rknn model file (optional for multimodal)
+VISION_MODEL_PATH: null
 
 # 对外暴露的模型名称 (Model Name in API)
 MODEL_NAME: "rkllm-model"
-
-# RKLLM 运行时库路径 (RKLLM Runtime Library Path)
-RKLLM_LIB_PATH: "/app/lib/librkllmrt.so"
 
 # LoRA 适配器路径 (可选)
 LORA_MODEL_PATH: null
 
 # Prompt Cache 路径 (可选)
 PROMPT_CACHE_PATH: null
+
+# ==============================================================================
+# 运行时库配置 (Runtime Libraries)
+# ==============================================================================
+
+# RKLLM 运行时库路径 (Path to librkllmrt.so)
+RKLLM_LIB_PATH: "/app/lib/librkllmrt.so"
+
+# RKNN 运行时库路径 (RKNN Runtime Library Path) (可选，启用多模态时配置，当MODEL_PATH为VLM时，需要配置)
+# Path to librknnrt.so used for vision encoder
+RKNN_LIB_PATH: "/app/lib/librknnrt.so"
+
+# 目标平台 (Options: rk3588, rk3576, rv1126b, rk3562)
+TARGET_PLATFORM: "rk3588"
+
+# RKNN NPU 核心数 (1, 2, 3=AUTO/ALL)
+RKNN_CORE_NUM: 3
+
+# ==============================================================================
+# 多模态标记配置 (Multimodal Tokens)
+# ==============================================================================
+# 默认适用于 Qwen2-VL/Qwen3-VL
+IMG_START: "<|vision_start|>"
+IMG_END: "<|vision_end|>"
+IMG_CONTENT: "<|image_pad|>"
 
 # ==============================================================================
 # 服务器配置 (Server Configuration)
