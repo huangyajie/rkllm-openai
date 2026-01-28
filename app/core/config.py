@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     RKLLM_LIB_PATH: str = "lib/librkllmrt.so"
     LORA_MODEL_PATH: Optional[str] = None
     PROMPT_CACHE_PATH: Optional[str] = None
+    VISION_MODEL_PATH: Optional[str] = None
+    RKNN_LIB_PATH: str = "lib/librknnrt.so"
+    RKNN_CORE_NUM: int = 3
+
+    # Multimodal Tokens
+    IMG_START: str = "<|vision_start|>"
+    IMG_END: str = "<|vision_end|>"
+    IMG_CONTENT: str = "<|image_pad|>"
 
     # Server Config
     HOST: str = "0.0.0.0"

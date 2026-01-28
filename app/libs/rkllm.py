@@ -5,6 +5,7 @@ import ctypes
 import os
 import logging
 from typing import Optional
+import numpy as np
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -230,20 +231,31 @@ class RKLLM:
         rkllm_param.mirostat_tau = 5.0
         rkllm_param.mirostat_eta = 0.1
         rkllm_param.is_async = False
-        rkllm_param.img_start = "".encode("utf-8")
-        rkllm_param.img_end = "".encode("utf-8")
-        rkllm_param.img_content = "".encode("utf-8")
 
-        rkllm_param.extend_param.base_domain_id = 0
+        # Dynamically configure for Multimodal vs Text-only
+        if settings.VISION_MODEL_PATH:
+            rkllm_param.img_start = settings.IMG_START.encode("utf-8")
+            rkllm_param.img_end = settings.IMG_END.encode("utf-8")
+            rkllm_param.img_content = settings.IMG_CONTENT.encode("utf-8")
+            rkllm_param.extend_param.base_domain_id = 1 # Multimodal
+        else:
+            rkllm_param.img_start = "".encode("utf-8")
+            rkllm_param.img_end = "".encode("utf-8")
+            rkllm_param.img_content = "".encode("utf-8")
+            rkllm_param.extend_param.base_domain_id = 0 # Text-only
         rkllm_param.extend_param.embed_flash = 1
         rkllm_param.extend_param.n_batch = 1
         rkllm_param.extend_param.use_cross_attn = 0
         rkllm_param.extend_param.enabled_cpus_num = 4
 
         if platform.lower() in ["rk3576", "rk3588"]:
+            # Use big cores (4, 5, 6, 7) for RK3576/RK3588
             rkllm_param.extend_param.enabled_cpus_mask = (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7)
+            logger.info("Platform '%s' detected: Binding LLM to big cores (4-7).", platform)
         else:
+            # Default to first 4 cores for unknown/other platforms
             rkllm_param.extend_param.enabled_cpus_mask = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3)
+            logger.info("Platform '%s' detected: Binding LLM to cores (0-3).", platform)
 
         self.handle = RKLLM_Handle_t()
 
@@ -311,24 +323,46 @@ class RKLLM:
 
         self.tools = None
 
-    def set_function_tools(self, system_prompt: str, tools: str, tool_response_str: str):
+    def set_function_tools(self, system_prompt: str, tools: Optional[str], tool_response_str: str):
         """Set function calling tools."""
-        if self.tools is None or not self.tools == tools:
-            self.tools = tools
+        # Normalize None to empty string for comparison and C calls
+        # Use "[]" (empty JSON list) instead of "" to properly clear tools in RKLLM
+        tools_str = tools if tools else "[]"
+
+        # Only update if changed
+        if self.tools != tools_str:
+            self.tools = tools_str
             self.set_function_tools_(
                 self.handle,
                 ctypes.c_char_p(system_prompt.encode("utf-8")),
-                ctypes.c_char_p(tools.encode("utf-8")),
+                ctypes.c_char_p(tools_str.encode("utf-8")),
                 ctypes.c_char_p(tool_response_str.encode("utf-8"))
             )
 
-    def run(self, role: str, enable_thinking: bool, prompt: str):
+    def run(self, role: str, enable_thinking: bool, prompt: str, multimodal_data: Optional[dict] = None):
         """Run inference."""
         rkllm_input = RKLLMInput()
         rkllm_input.role = role.encode("utf-8") if role else "user".encode("utf-8")
         rkllm_input.enable_thinking = ctypes.c_bool(enable_thinking)
-        rkllm_input.input_type = RKLLMInputType.RKLLM_INPUT_PROMPT
-        rkllm_input.input_data.prompt_input = ctypes.c_char_p(prompt.encode("utf-8"))
+
+        if multimodal_data:
+            rkllm_input.input_type = RKLLMInputType.RKLLM_INPUT_MULTIMODAL
+            rkllm_input.input_data.multimodal_input.prompt = ctypes.c_char_p(prompt.encode("utf-8"))
+
+            # Convert embeddings to ctypes pointer
+            embeddings = multimodal_data["embeddings"]
+            # Ensure it's a numpy array of float32
+            if not isinstance(embeddings, np.ndarray):
+                embeddings = np.array(embeddings, dtype=np.float32)
+
+            rkllm_input.input_data.multimodal_input.image_embed = embeddings.ctypes.data_as(ctypes.POINTER(ctypes.c_float))
+            rkllm_input.input_data.multimodal_input.n_image_tokens = multimodal_data["n_image_tokens"]
+            rkllm_input.input_data.multimodal_input.n_image = multimodal_data.get("n_image", 1)
+            rkllm_input.input_data.multimodal_input.image_width = multimodal_data["image_width"]
+            rkllm_input.input_data.multimodal_input.image_height = multimodal_data["image_height"]
+        else:
+            rkllm_input.input_type = RKLLMInputType.RKLLM_INPUT_PROMPT
+            rkllm_input.input_data.prompt_input = ctypes.c_char_p(prompt.encode("utf-8"))
 
         self.rkllm_run(self.handle, ctypes.byref(rkllm_input), ctypes.byref(self.rkllm_infer_params), None)
 
