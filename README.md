@@ -1,5 +1,7 @@
 # RKLLM OpenAI API
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 An OpenAI-compatible API server for Rockchip RKLLM (Rockchip Large Language Model) inference.
 
 This project provides a FastAPI-based server that wraps the RKLLM C++ runtime, allowing you to run LLMs on Rockchip NPUs (like RK3588, RK3576) using standard OpenAI clients and tools.
